@@ -2,6 +2,7 @@
 
 import irclib
 import optparse
+import sys
 
 opt = optparse.OptionParser()
 
@@ -11,13 +12,55 @@ opt.add_option("-p", "--port", dest="port", default="6667",
         help="Port to connect to on the server")
 opt.add_option("", "--ssl", dest="ssl", default="off", help="Use SSL or not")
 opt.add_option("-n", "--nickname", dest="nick", default="testbot", help="Bot \
-        nickname")
+nickname")
 opt.add_option("-i", "--ident", dest="ident", default="test", help="Bot ident")
 opt.add_option("-r", "--realname", dest="rname", default="ubnotu IRC Bot",
         help="Bot real name")
 opt.add_option("-j", "--nickservpass", dest="npass", default="", help="Bot \
-        nickserv password")
+nickserv password")
 opt.add_option("-v", "--verbose", dest="verbosity", action="count", default=0)
+opt.add_option("", "--channels", dest="channels", default="", help="Comma \
+separated list of channels to join")
 
-opts, args = opt.parse_args()
+class ubnotu_ng:
+    def pprint(self, msg, level=0):
+        """ Print a message if the specified level is at least the level of
+        verbosity. Levels of 0 are always printed. """
+        if(level <= self.options.verbosity):
+            print msg
+
+    def __init__(self, options):
+        self.options = options
+        self.pprint("Starting ubnotu-ng...")
+
+    def run(self):
+        #connect
+
+        self.pprint("Connecting to IRC server %s" % self.options.server)
+        self.irc = irclib.IRC()
+
+        try:
+            self.c = self.irc.server().connect(server = self.options.server,
+                    port = int(self.options.port), nickname = self.options.nick,
+                    username = self.options.ident, ircname =
+                    self.options.rname, ssl=True)
+        except irclib.ServerConnectionError, x:
+            self.pprint(x)
+            sys.exit(-1)
+
+        self.pprint("Connection Successful!")
+
+        #FIXME XXX Just for testing
+        self.c.join("#ubnotu-ng")
+
+        #point of no return
+        self.pprint("Going into the rabbit hole", level=1)
+        self.irc.process_forever()
+        self.pprint("Shouldn't ever happen.... something is wrong")
+
+if __name__ == "__main__":
+    opts, args = opt.parse_args()
+    bot = ubnotu_ng(opts)
+
+    bot.run()
 

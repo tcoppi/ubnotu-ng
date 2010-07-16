@@ -12,6 +12,8 @@ NICK="ubnotung"
 IDENT="ubnotu"
 REALNAME="ubnotu-ng"
 NICKSERVPASS="urmom"
+CHANNELS="#ubnotu-ng"
 
-`$PWD/ubnotu.py --server $SERVER --port $PORT --ssl $SSL --nick $NICK \
---ident $IDENT --realname $REALNAME --nickservepass = $NICKSERVPASS`
+$PWD/ubnotu.py --server $SERVER --port $PORT --ssl $SSL --nickname $NICK \
+--ident $IDENT --realname $REALNAME --nickservpass = $NICKSERVPASS \
+--channels $CHANNELS
