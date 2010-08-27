@@ -15,5 +15,5 @@ NICKSERVPASS="urmom"
 CHANNELS="#ubnotu-ng"
 
 $PWD/ubnotu.py --server $SERVER --port $PORT $SSL --nickname $NICK \
---ident $IDENT --realname $REALNAME --nickservpass = $NICKSERVPASS \
---channels $CHANNELS
+--ident $IDENT --realname $REALNAME --nickservpass $NICKSERVPASS \
+--channels $CHANNELS -v
