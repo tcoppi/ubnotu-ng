@@ -123,7 +123,7 @@ class ubnotu_ng:
         passwd = open("passwd", "rw+")
 
         if info['pubmsg'] is True:
-            self.msg(info['target'], "Registeration only works in PM.")
+            self.msg(info['target'], "Registration only works in PM.")
             return
 
         self.pprint("Registering a new user.", level=1)
