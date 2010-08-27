@@ -47,7 +47,7 @@ class ubnotu_ng:
         self.factchar = '!'
         self.cmdchar = '@'
         self.rand = open("/dev/urandom", "r")
-        self.identified = {} # maps nicks to names of users they are identified for
+        self.identified = {} # maps nicks to names of users:capability they are identified for
 
         try:
             self.c = self.irc.server().connect(server = self.options.server,
@@ -141,7 +141,8 @@ class ubnotu_ng:
 
         hash = hashlib.sha256(salt + info['args'][1]).hexdigest()
 
-        outstring = info['args'][0] + ":" + binascii.hexlify(salt) + "|" + hash
+        outstring = info['args'][0] + ":" + binascii.hexlify(salt) + "|" + hash \
+                + "/" + "USER"
 
         passwd.write(outstring + "\n")
 
@@ -164,7 +165,8 @@ class ubnotu_ng:
             if info['args'][0] == line.split(':')[0]:
                 rest = line.split(':')[1].split('|')
                 salt = binascii.unhexlify(rest[0])
-                hash = rest[1]
+                hash = rest[1].split('/')[0]
+                cap = rest[1].split('/')[1]
 
                 hashed = hashlib.sha256(salt + info['args'][1]).hexdigest()
 
@@ -175,7 +177,7 @@ user " + info['args'][0])
 
                     #mark nick as identified for user
                     self.identified.setdefault(info['nick'])
-                    self.identified[info['nick']] = info['args'][0]
+                    self.identified[info['nick']] = info['args'][0] + ":" + cap
                 else:
                     self.msg(info['nick'], "Identification FAILED")
                     self.pprint(info['nick'] + " FAILED to identify for user "
