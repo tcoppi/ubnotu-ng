@@ -138,12 +138,10 @@ class ubnotu_ng:
                     + nick + "> " + arg
 
                     updated = True
+                    lines.append(nline)
+                    break
 
-
-            if updated is True:
-                lines.append(nline)
-            else:
-                lines.append(line)
+            lines.append(line)
 
         if updated is False:
             #add a new line
@@ -159,7 +157,9 @@ class ubnotu_ng:
         #everything is in memory so I defy someone to come up with a way that
         #is significantly faster in practice
         seen = open("Seen.db", "w")
-        seen.writelines(lines)
+
+        for line in lines:
+            seen.write(line + "\n")
         seen.close()
 
     def cmd_register(self, info):
@@ -237,11 +237,23 @@ user " + info['args'][0])
 
         #take different arguments if it is sent to a channel or in PM
         if info['target'][0] == '#':
+
+            try:
+                if info['args'][0] == "-channel":
+                    chan = info['args'][1]
+                    nick = info['args'][2]
+                else:
+                    chan = info['target']
+                    nick = info['args'][0]
+            except IndexError:
+                self.msg(info['target'], "Syntax Error")
+                return
+
             for line in seen.read().split('\n'):
                 parsed = line.split(',')
 
-                if parsed[0] == info['target']:
-                    if parsed[1] == info['args'][0]:
+                if parsed[0] == chan:
+                    if parsed[1] == nick:
 
                         #calculate the time
                         a = datetime.datetime.fromtimestamp(float(parsed[2]))
@@ -249,14 +261,14 @@ user " + info['args'][0])
                         diff = datetime.datetime.now() - a
 
                         self.msg(info['target'], info['nick'] + ": " + \
-                                info['args'][0] + " was last seen in " + \
-                                info['target'] + " " + str(diff) + " ago: " + parsed[-1])
+                                nick + " was last seen in " + \
+                                chan + " " + str(diff) + " ago: " + parsed[-1])
 
                         found = True
 
         if found is False:
             self.msg(info['target'], info['nick'] + ": I have not seen " +
-                    info['args'][0])
+                    nick)
 
         seen.close()
 
