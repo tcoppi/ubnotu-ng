@@ -4,6 +4,7 @@ import irclib
 import optparse
 import sys
 import datetime
+import time
 import binascii
 import hashlib
 
@@ -119,6 +120,47 @@ class ubnotu_ng:
 
             builtins.get(cmd, self.dispatch)(info)
 
+        #update the seen database
+        seen = open("Seen.db", "r")
+
+        lines = []
+        updated = False
+
+        for line in seen.read().split('\n'):
+            parsed = line.split(',')
+
+            if parsed[0] == eventlist.target():
+                if parsed[1] == nick:
+                    t = datetime.datetime.now()
+
+                    nline = eventlist.target() + "," + nick + "," + \
+                    str(time.mktime(t.timetuple()) + 1e-6*t.microsecond) + "," + "<" \
+                    + nick + "> " + arg
+
+                    updated = True
+
+
+            if updated is True:
+                lines.append(nline)
+            else:
+                lines.append(line)
+
+        if updated is False:
+            #add a new line
+            t = datetime.datetime.now()
+            nline = eventlist.target() + "," + nick + "," + str(time.mktime(t.timetuple()) +
+                    1e-6*t.microsecond) + "," + "<" + nick + "> " + arg
+
+            lines.append(nline)
+
+        seen.close()
+
+        #Yes this is not the most efficient way to do this by far, but
+        #everything is in memory so I defy someone to come up with a way that
+        #is significantly faster in practice
+        seen = open("Seen.db", "w")
+        seen.writelines(lines)
+        seen.close()
 
     def cmd_register(self, info):
 
