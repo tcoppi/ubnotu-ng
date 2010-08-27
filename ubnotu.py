@@ -31,7 +31,7 @@ class ubnotu_ng:
         """ Print a message if the specified level is at least the level of
         verbosity. Levels of 0 are always printed. """
         if(level <= self.options.verbosity):
-            print datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " ",
+            print datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + str(level) + " ",
 
             print msg
 
@@ -113,10 +113,12 @@ class ubnotu_ng:
 
             builtins = {
                         "register": self.cmd_register,
-                        "identify": self.cmd_identify
+                        "identify": self.cmd_identify,
+                        "seen": self.cmd_seen
                        }
 
             builtins.get(cmd, self.dispatch)(info)
+
 
     def cmd_register(self, info):
 
@@ -182,6 +184,39 @@ user " + info['args'][0])
                     self.msg(info['nick'], "Identification FAILED")
                     self.pprint(info['nick'] + " FAILED to identify for user "
                             + info['args'][0])
+
+        passwd.close()
+
+    def cmd_seen(self, info):
+        #supybot format Seen.db
+        seen = open("Seen.db", "r")
+
+        found = False
+
+        #take different arguments if it is sent to a channel or in PM
+        if info['target'][0] == '#':
+            for line in seen.read().split('\n'):
+                parsed = line.split(',')
+
+                if parsed[0] == info['target']:
+                    if parsed[1] == info['args'][0]:
+
+                        #calculate the time
+                        a = datetime.datetime.fromtimestamp(float(parsed[2]))
+
+                        diff = datetime.datetime.now() - a
+
+                        self.msg(info['target'], info['nick'] + ": " + \
+                                info['args'][0] + " was last seen in " + \
+                                info['target'] + " " + str(diff) + " ago: " + parsed[-1])
+
+                        found = True
+
+        if found is False:
+            self.msg(info['target'], info['nick'] + ": I have not seen " +
+                    info['args'][0])
+
+        seen.close()
 
     def dispatch(self, info):
         self.pprint("Not builtin command, dispatching to plugins.", level=1)
