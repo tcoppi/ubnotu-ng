@@ -34,7 +34,7 @@ class ubnotu_ng:
         """ Print a message if the specified level is at least the level of
         verbosity. Levels of 0 are always printed. """
         if(level <= self.options.verbosity):
-            print datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + str(level) + " ",
+            print datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + str(level) + " ",
 
             print msg
 
@@ -317,6 +317,10 @@ user " + info['args'][0])
         c.execute("select * from facts where name = \"%s\"" % info['factoid'])
 
         res = c.fetchone()
+
+        if res == None:
+            self.msg(info['target'], "Factoid %s not found." % info['factoid'])
+            return
 
         #for compatibility with old-style factoids
         if "<reply>" in res[4]:
