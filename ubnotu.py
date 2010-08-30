@@ -8,6 +8,7 @@ import time
 import binascii
 import hashlib
 import random
+import sqlite3
 
 opt = optparse.OptionParser()
 
@@ -39,6 +40,7 @@ class ubnotu_ng:
 
     def __init__(self, options):
         self.options = options
+        self.fcon = sqlite3.connect("factoid.db")
         self.pprint("Starting ubnotu-ng...")
         random.seed()
 
@@ -51,6 +53,14 @@ class ubnotu_ng:
         self.cmdchar = '@'
         self.rand = open("/dev/urandom", "r")
         self.identified = {} # maps nicks to names of users:capability they are identified for
+
+        self.builtins = {
+                    "register": self.cmd_register,
+                    "identify": self.cmd_identify,
+                    "seen": self.cmd_seen,
+                    "8ball": self.cmd_8ball,
+                    "fortune": self.cmd_fortune
+                   }
 
         try:
             self.c = self.irc.server().connect(server = self.options.server,
@@ -114,15 +124,21 @@ class ubnotu_ng:
                     "args": arg[1:].split(' ')[1:]
                     }
 
-            builtins = {
-                        "register": self.cmd_register,
-                        "identify": self.cmd_identify,
-                        "seen": self.cmd_seen,
-                        "8ball": self.cmd_8ball,
-                        "fortune": self.cmd_fortune
-                       }
+            self.builtins.get(cmd, self.dispatch)(info)
 
-            builtins.get(cmd, self.dispatch)(info)
+        elif arg[0] == self.factchar:
+            info = {
+                    "nick": nick,
+                    "user": user,
+                    "host": host,
+                    "pubmsg": ispubmsg,
+                    "target": eventlist.target(),
+                    "source": eventlist.source(),
+                    "factoid": arg[1:].split(' ')[0],
+                    "args": arg[1:].split(' ')[1:]
+                    }
+
+            self.do_factoid_lookup(info)
 
         #update the seen database
         seen = open("Seen.db", "r")
@@ -291,6 +307,24 @@ user " + info['args'][0])
                     nick)
 
         seen.close()
+
+    def do_factoid_lookup(self, info):
+        c = self.fcon.cursor()
+        output = ""
+
+        self.pprint("Looking up factoid %s" % info['factoid'], 1)
+
+        c.execute("select * from facts where name = \"%s\"" % info['factoid'])
+
+        res = c.fetchone()
+
+        #for compatibility with old-style factoids
+        if "<reply>" in res[4]:
+            output = res[4][7:]
+        else:
+            output = res[4]
+
+        self.msg(info['target'], output)
 
     def dispatch(self, info):
         self.pprint("Not builtin command, dispatching to plugins.", level=1)
