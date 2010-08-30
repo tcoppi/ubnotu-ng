@@ -7,6 +7,7 @@ import datetime
 import time
 import binascii
 import hashlib
+import random
 
 opt = optparse.OptionParser()
 
@@ -39,6 +40,7 @@ class ubnotu_ng:
     def __init__(self, options):
         self.options = options
         self.pprint("Starting ubnotu-ng...")
+        random.seed()
 
     def run(self):
         #connect
@@ -115,7 +117,9 @@ class ubnotu_ng:
             builtins = {
                         "register": self.cmd_register,
                         "identify": self.cmd_identify,
-                        "seen": self.cmd_seen
+                        "seen": self.cmd_seen,
+                        "8ball": self.cmd_8ball,
+                        "fortune": self.cmd_fortune
                        }
 
             builtins.get(cmd, self.dispatch)(info)
@@ -228,6 +232,22 @@ user " + info['args'][0])
                             + info['args'][0])
 
         passwd.close()
+
+    def cmd_8ball(self, info):
+        self.fortune(info, "8ball.txt")
+
+    def cmd_fortune(self, info):
+        self.fortune(info, "fortune.txt")
+
+    def fortune(self, info, file):
+        f = open(file, "r")
+
+        replies = []
+        for line in f:
+            replies.append(line)
+
+        self.msg(info['target'], random.choice(replies))
+        f.close()
 
     def cmd_seen(self, info):
         #supybot format Seen.db
